@@ -76,6 +76,11 @@ class ImageTagger:
                 if self.image_index == len(self.images):
                     self.image_index = 0
                 self.show_image()
+            if event.key == pygame.K_LEFT:
+                self.image_index -= 1
+                if self.image_index < 0:
+                    self.image_index = len(self.images) - 1
+                self.show_image()
 
             for index, key in enumerate(self.tagkeys, start=1):
                 if event.key == key and not self.keys_down[index]:
