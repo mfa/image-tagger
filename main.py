@@ -75,6 +75,7 @@ class ImageTagger:
                 self.keys_down[2] = False
 
     def on_loop(self):
+        # redraw frame when window gets active again after loosing focus
         if pygame.display.get_active() != self._active:
             self._active = pygame.display.get_active()
             if pygame.display.get_active():
@@ -95,10 +96,11 @@ class ImageTagger:
                 self.on_event(event)
             self.on_loop()
             self.on_render()
+            # limit to 30 fps -- limit CPU usage
             self.clock.tick(30)
         self.on_cleanup()
 
 
 if __name__ == "__main__":
-    theApp = ImageTagger()
-    theApp.on_execute()
+    app = ImageTagger()
+    app.on_execute()
