@@ -38,7 +38,7 @@ class ImageTagger:
         self.screen = pygame.display.set_mode((1900, 800), pygame.RESIZABLE)
         self.max_x, self.max_y = pygame.display.get_window_size()
 
-        self.font = pygame.font.SysFont("Helvetica", 20)
+        self.font = pygame.font.SysFont("Helvetica", 25)
 
         self.show_image()
         self.show_tagset()
@@ -48,7 +48,7 @@ class ImageTagger:
         for index, (tag, state) in enumerate(self.tagset_state.items()):
             s = f"{index+1} | {tag}: {state}"
             _tag = self.font.render(s, True, (255, 255, 255))
-            self.screen.blit(_tag, (10, 10 + (25 * index)))
+            self.screen.blit(_tag, (10, 10 + (30 * index)))
         pygame.display.update()
 
     def show_image(self):
