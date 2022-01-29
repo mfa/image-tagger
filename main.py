@@ -14,6 +14,21 @@ class ImageTagger:
         # remember key downs for toggles
         self.keys_down = [False] * (len(self.tagset) + 1)
 
+        # list of keys (1..9) for tags
+        self.tagkeys = [
+            pygame.K_1,
+            pygame.K_2,
+            pygame.K_3,
+            pygame.K_4,
+            pygame.K_5,
+            pygame.K_6,
+            pygame.K_7,
+            pygame.K_8,
+            pygame.K_9,
+        ]
+        # limit to the used ones
+        self.tagkeys = self.tagkeys[: len(self.tagset)]
+
         self.clock = pygame.time.Clock()
 
     def on_init(self):
@@ -43,6 +58,13 @@ class ImageTagger:
         self.screen.blit(image, (self.max_x - x - 10, 10))
         pygame.display.flip()
 
+    def tag_key_pressed(self, key):
+        self.keys_down[key] = True
+        self.tagset_state[self.tagset[key - 1]] = not self.tagset_state[
+            self.tagset[key - 1]
+        ]
+        self.show_tagset()
+
     def on_event(self, event):
         if event.type == pygame.QUIT:
             self._running = False
@@ -55,24 +77,14 @@ class ImageTagger:
                     self.image_index = 0
                 self.show_image()
 
-            if event.key == pygame.K_1 and not self.keys_down[1]:
-                self.keys_down[1] = True
-                self.tagset_state[self.tagset[0]] = not self.tagset_state[
-                    self.tagset[0]
-                ]
-                self.show_tagset()
-            if event.key == pygame.K_2 and not self.keys_down[2]:
-                self.keys_down[2] = True
-                self.tagset_state[self.tagset[1]] = not self.tagset_state[
-                    self.tagset[1]
-                ]
-                self.show_tagset()
+            for index, key in enumerate(self.tagkeys, start=1):
+                if event.key == key and not self.keys_down[index]:
+                    self.tag_key_pressed(index)
 
         if event.type == pygame.KEYUP:
-            if event.key == pygame.K_1 and self.keys_down[1]:
-                self.keys_down[1] = False
-            if event.key == pygame.K_2 and self.keys_down[2]:
-                self.keys_down[2] = False
+            for index, key in enumerate(self.tagkeys, start=1):
+                if event.key == key and self.keys_down[index]:
+                    self.keys_down[index] = False
 
     def on_loop(self):
         # redraw frame when window gets active again after loosing focus
