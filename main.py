@@ -1,18 +1,21 @@
+from pathlib import Path
+
 import click
 import pygame
 
-from utils import load_tags
+from utils import load_image_tags, load_tagset, save_image_tags
 
 
 class ImageTagger:
-    def __init__(self, tagset_filename):
+    def __init__(self, tagset_filename, images, data):
         self._running = True
         self._active = True
 
-        self.tagset = load_tags(tagset_filename)
-        self.tagset_state = {i: False for i in self.tagset}
-        self.images = ["G0035540.JPG", "G0036927.JPG", "G0036930.JPG"]
+        self.tagset = load_tagset(tagset_filename)
+        self.images = list(Path(images).glob("*JPG"))
         self.image_index = 0
+        self.data_folder = Path(data)
+        self.image_tags = load_image_tags(self.data_folder) or {}
 
         # remember key downs for toggles
         self.keys_down = [False] * (len(self.tagset) + 1)
@@ -41,15 +44,23 @@ class ImageTagger:
         self.screen = pygame.display.set_mode((1900, 800), pygame.RESIZABLE)
         self.max_x, self.max_y = pygame.display.get_window_size()
 
-        self.font = pygame.font.SysFont("Helvetica", 25)
+        font = (
+            "sourcecodepro"
+            if "sourcecodepro" in pygame.font.get_fonts()
+            else "Helvetica"
+        )
+        self.font = pygame.font.SysFont(font, 25)
 
-        self.show_image()
-        self.show_tagset()
+        self.update()
+
+    def get_tags(self, image_index):
+        image_name = self.images[self.image_index]
+        return self.image_tags.get(image_name.name) or {i: False for i in self.tagset}
 
     def show_tagset(self):
-        pygame.draw.rect(self.screen, (0, 0, 0), (1, 10, 200, 200))
+        pygame.draw.rect(self.screen, (0, 0, 0), (1, 1, 400, 200))
         for index, (tag, state) in enumerate(self.tagset_state.items()):
-            s = f"{index+1} | {tag}: {state}"
+            s = f" {index+1} | {tag}: {state}"
             _tag = self.font.render(s, True, (255, 255, 255))
             self.screen.blit(_tag, (10, 10 + (30 * index)))
         pygame.display.update()
@@ -68,22 +79,45 @@ class ImageTagger:
         ]
         self.show_tagset()
 
+    def show_help(self):
+        for index, (key, text) in enumerate(
+            [
+                ("->", "next image (state is saved)"),
+                ("<-", "previous image"),
+                (" q", "quit"),
+            ]
+        ):
+            s = self.font.render(f"{key} | {text}", True, (255, 255, 255))
+            self.screen.blit(s, (10, 510 + (30 * index)))
+        pygame.display.update()
+
+    def save(self):
+        self.image_tags[self.images[self.image_index].name] = self.tagset_state
+        save_image_tags(self.data_folder, self.image_tags)
+
+    def update(self):
+        self.show_image()
+        self.tagset_state = self.get_tags(self.image_index)
+        self.show_tagset()
+        self.show_help()
+
     def on_event(self, event):
         if event.type == pygame.QUIT:
             self._running = False
         if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_ESCAPE or event.key == pygame.K_q:
+            if event.key == pygame.K_q:
                 self._running = False
-            if event.key == pygame.K_n or event.key == pygame.K_RIGHT:
+            if event.key == pygame.K_RIGHT:
+                self.save()
                 self.image_index += 1
                 if self.image_index == len(self.images):
                     self.image_index = 0
-                self.show_image()
+                self.update()
             if event.key == pygame.K_LEFT:
                 self.image_index -= 1
                 if self.image_index < 0:
                     self.image_index = len(self.images) - 1
-                self.show_image()
+                self.update()
 
             for index, key in enumerate(self.tagkeys, start=1):
                 if event.key == key and not self.keys_down[index]:
@@ -122,9 +156,11 @@ class ImageTagger:
 
 
 @click.command()
-@click.option("--tagset", type=click.Path(exists=True))
-def main(tagset):
-    app = ImageTagger(tagset_filename=tagset)
+@click.option("--tagset", type=click.Path(exists=True), help="yaml file with tagset")
+@click.option("--images", type=click.Path(exists=True), help="folder with images")
+@click.option("--data", type=click.Path(exists=True), help="folder to store saved tags")
+def main(tagset, images, data):
+    app = ImageTagger(tagset_filename=tagset, images=images, data=data)
     app.on_execute()
 
 
