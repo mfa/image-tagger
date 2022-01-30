@@ -1,12 +1,15 @@
+import click
 import pygame
+
+from utils import load_tags
 
 
 class ImageTagger:
-    def __init__(self):
+    def __init__(self, tagset_filename):
         self._running = True
         self._active = True
 
-        self.tagset = ("blured", "forest", "fields", "houses", "humans")
+        self.tagset = load_tags(tagset_filename)
         self.tagset_state = {i: False for i in self.tagset}
         self.images = ["G0035540.JPG", "G0036927.JPG", "G0036930.JPG"]
         self.image_index = 0
@@ -118,6 +121,12 @@ class ImageTagger:
         self.on_cleanup()
 
 
-if __name__ == "__main__":
-    app = ImageTagger()
+@click.command()
+@click.option("--tagset", type=click.Path(exists=True))
+def main(tagset):
+    app = ImageTagger(tagset_filename=tagset)
     app.on_execute()
+
+
+if __name__ == "__main__":
+    main()
