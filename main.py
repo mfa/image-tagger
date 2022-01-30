@@ -55,7 +55,11 @@ class ImageTagger:
 
     def get_tags(self, image_index):
         image_name = self.images[self.image_index]
-        return self.image_tags.get(image_name.name) or {i: False for i in self.tagset}
+        _t = self.image_tags.get(image_name.name)
+        for i in self.tagset:
+            if i not in _t:
+                _t[i] = False
+        return _t
 
     def show_tagset(self):
         pygame.draw.rect(self.screen, (0, 0, 0), (1, 1, 400, 200))
