@@ -55,7 +55,7 @@ class ImageTagger:
 
     def get_tags(self, image_index):
         image_name = self.images[self.image_index]
-        _t = self.image_tags.get(image_name.name)
+        _t = self.image_tags.get(image_name.name) or {}
         for i in self.tagset:
             if i not in _t:
                 _t[i] = False
