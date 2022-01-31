@@ -16,6 +16,7 @@ class ImageTagger:
         self.image_index = 0
         self.data_folder = Path(data)
         self.image_tags = load_image_tags(self.data_folder) or {}
+        self.new_image = False
 
         # remember key downs for toggles
         self.keys_down = [False] * (len(self.tagset) + 1)
@@ -56,17 +57,22 @@ class ImageTagger:
     def get_tags(self, image_index):
         image_name = self.images[self.image_index]
         _t = self.image_tags.get(image_name.name) or {}
+        self.new_image = not bool(_t)
         for i in self.tagset:
             if i not in _t:
                 _t[i] = False
         return _t
 
     def show_tagset(self):
-        pygame.draw.rect(self.screen, (0, 0, 0), (1, 1, 400, 200))
+        pygame.draw.rect(self.screen, (0, 0, 0), (1, 1, 400, 300))
         for index, (tag, state) in enumerate(self.tagset_state.items()):
             s = f" {index+1} | {tag}: {state}"
             _tag = self.font.render(s, True, (255, 255, 255))
             self.screen.blit(_tag, (10, 10 + (30 * index)))
+
+        if self.new_image:
+            s = self.font.render("new image", True, (255, 255, 255))
+            self.screen.blit(s, (10, 10 + (30 * index) + 40))
         pygame.display.update()
 
     def show_image(self):
@@ -74,6 +80,12 @@ class ImageTagger:
         image_name = self.images[self.image_index]
         image = pygame.transform.scale(pygame.image.load(image_name), (x, y))
         self.screen.blit(image, (self.max_x - x - 10, 10))
+
+        pygame.draw.rect(self.screen, (0, 0, 0), (1, 400, 400, 200))
+        _s = f"{image_name.name}: {self.image_index}"
+        s = self.font.render(_s, True, (255, 255, 255))
+        self.screen.blit(s, (10, 400))
+
         pygame.display.flip()
 
     def tag_key_pressed(self, key):
@@ -88,6 +100,7 @@ class ImageTagger:
             [
                 ("->", "next image (state is saved)"),
                 ("<-", "previous image"),
+                (" n", "next NEW image"),
                 (" q", "quit"),
             ]
         ):
@@ -121,6 +134,17 @@ class ImageTagger:
                 self.image_index -= 1
                 if self.image_index < 0:
                     self.image_index = len(self.images) - 1
+                self.update()
+            if event.key == pygame.K_n:
+                while True:
+                    self.image_index += 1
+                    if self.image_index == len(self.images):
+                        self.image_index = 0
+                        break
+                    # use tags to detect new images
+                    self.get_tags(self.image_index)
+                    if self.new_image:
+                        break
                 self.update()
 
             for index, key in enumerate(self.tagkeys, start=1):
