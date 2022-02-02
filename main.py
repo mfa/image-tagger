@@ -81,7 +81,7 @@ class ImageTagger:
         image = pygame.transform.scale(pygame.image.load(image_name), (x, y))
         self.screen.blit(image, (self.max_x - x - 10, 10))
 
-        pygame.draw.rect(self.screen, (0, 0, 0), (1, 400, 400, 200))
+        pygame.draw.rect(self.screen, (0, 0, 0), (1, 400, 500, 400))
         _s = f"{image_name.name}: {self.image_index}"
         s = self.font.render(_s, True, (255, 255, 255))
         self.screen.blit(s, (10, 400))
