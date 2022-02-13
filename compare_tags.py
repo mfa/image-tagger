@@ -9,18 +9,17 @@ from utils import yaml
 
 @click.command()
 @click.option(
-    "--folder", type=click.Path(exists=True), help="folder with tag.yml files"
+    "--folder", type=click.Path(exists=True), help="folder with tags-<name>.yml files"
 )
 def main(folder):
     data = defaultdict(dict)
     labellers = []
     for fn in Path(folder).glob("*.yml"):
+        # assumes tags-<name>.yml files, i.e. tags-mfa.yml
         labeller_id = fn.name.split("-")[-1].split(".")[0]
         labellers.append(labeller_id)
         for image_name, tags in yaml.load(open(fn)).items():
             for tag, value in tags.items():
-                if tag == "blured":
-                    tag = "blurred"
                 if tag == "blurred":
                     data[image_name][labeller_id] = {tag: value}
     test_files = [
@@ -45,7 +44,7 @@ def main(folder):
         "G0048119.JPG",
         "G0048219.JPG",
     ]
-    # return as csv
+
     with open(Path(folder) / "comparision.csv", "w", newline="") as csvfile:
         fieldnames = ["image_name", "test"] + [i for i in labellers] + ["agreement"]
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
@@ -56,6 +55,7 @@ def main(folder):
                 row = {"image_name": image_name, "test": image_name in test_files}
                 for k, v in d.items():
                     for tag, value in v.items():
+                        # NOTE: this works only for one tag
                         row[k] = tag if value else f"not_{tag}"
 
                 row["agreement"] = len(set([row[i] for i in d.keys()])) == 1
