@@ -7,12 +7,12 @@ from utils import load_image_tags, load_tagset, save_image_tags
 
 
 class ImageTagger:
-    def __init__(self, tagset_filename, images, data):
+    def __init__(self, tagset_filename, images, data, extension):
         self._running = True
         self._active = True
 
         self.tagset = load_tagset(tagset_filename)
-        self.images = list(Path(images).glob("*JPG"))
+        self.images = list(Path(images).glob(f"*{extension}"))
         self.image_index = 0
         self.data_folder = Path(data)
         self.image_tags = load_image_tags(self.data_folder) or {}
@@ -187,8 +187,9 @@ class ImageTagger:
 @click.option("--tagset", type=click.Path(exists=True), help="yaml file with tagset")
 @click.option("--images", type=click.Path(exists=True), help="folder with images")
 @click.option("--data", type=click.Path(exists=True), help="folder to store saved tags")
-def main(tagset, images, data):
-    app = ImageTagger(tagset_filename=tagset, images=images, data=data)
+@click.option("--extension", help="extension of images", default="JPG")
+def main(tagset, images, data, extension):
+    app = ImageTagger(tagset_filename=tagset, images=images, data=data, extension=extension)
     app.on_execute()
 
 
