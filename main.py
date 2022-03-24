@@ -189,7 +189,9 @@ class ImageTagger:
 @click.option("--data", type=click.Path(exists=True), help="folder to store saved tags")
 @click.option("--extension", help="extension of images", default="JPG")
 def main(tagset, images, data, extension):
-    app = ImageTagger(tagset_filename=tagset, images=images, data=data, extension=extension)
+    app = ImageTagger(
+        tagset_filename=tagset, images=images, data=data, extension=extension
+    )
     app.on_execute()
 
 
